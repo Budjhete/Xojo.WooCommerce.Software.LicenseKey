@@ -1,13 +1,13 @@
 #tag Interface
 Protected Interface WCLInterface
 	#tag Method, Flags = &h0
-		Sub wclErrorMessage(error as Text)
+		Sub wclErrorMessage(pLicense as WooCommerceLicense.WPLicense)
 		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub wcLicenseCheck(Active as Boolean = false)
+		Sub wcLicenseCheck(pLicense as WooCommerceLicense.WPLicense)
 		  
 		End Sub
 	#tag EndMethod

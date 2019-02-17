@@ -4,7 +4,8 @@ Inherits Xojo.Net.HTTPSocket
 	#tag Event
 		Sub Error(err as RuntimeException)
 		  Try
-		    wclInterface.wclErrorMessage(err.Message.ToText)
+		    me.error = err.Message.ToText
+		    wclInterface.wclErrorMessage(me)
 		    
 		  Catch re As RuntimeException
 		    
@@ -43,14 +44,17 @@ Inherits Xojo.Net.HTTPSocket
 		    
 		    if not Active then
 		      if ActivationAttempt < 1 then
-		        Xojo.Core.Timer.CallLater(2000, AddressOf Activate)
+		        Xojo.Core.Timer.CallLater(10000, AddressOf Activate)
 		        ActivationAttempt = ActivationAttempt + 1
 		      else
-		        wclInterface.wcLicenseCheck(False)
+		        wclInterface.wcLicenseCheck(me)
 		      end if
+		      
 		    else
-		      wclInterface.wcLicenseCheck(true)
+		      wclInterface.wcLicenseCheck(me)
 		    end if
+		    
+		    
 		    
 		  Catch re As RuntimeException
 		    
@@ -64,7 +68,7 @@ Inherits Xojo.Net.HTTPSocket
 		Sub Activate()
 		  Dim url as Text = website+"/woocommerce/?wc-api=software-api&request=activation&email="+email+"&license_key="+license_key+"&product_id="+Product_id+"&platform="+Compagnie
 		  if instance > 0 then url = url + "&instance="+instance.ToText
-		  dim tURL as text = url.ReplaceAll(" ", "").ReplaceAll(Text.FromUnicodeCodepoint(0009), "")
+		  dim tURL as text = url.ReplaceAll(" ", "").ReplaceAll(Text.FromUnicodeCodepoint(0009), "").ReplaceAccents
 		  me.Send("POST", tURL)
 		End Sub
 	#tag EndMethod
@@ -74,7 +78,7 @@ Inherits Xojo.Net.HTTPSocket
 		  Dim url as Text = website+"/woocommerce/?wc-api=software-api&request=check&email="+email+"&license_key="+license_key+"&product_id="+Product_id
 		  
 		  
-		  dim tURL as text = url.ReplaceAll(" ", "").ReplaceAll(Text.FromUnicodeCodepoint(0009), "")
+		  dim tURL as text = url.ReplaceAll(" ", "").ReplaceAll(Text.FromUnicodeCodepoint(0009), "").ReplaceAccents
 		  me.Send("POST", tURL)
 		End Sub
 	#tag EndMethod
@@ -94,7 +98,9 @@ Inherits Xojo.Net.HTTPSocket
 		  Compagnie = dLicense.Lookup("Compagnie", "")
 		  
 		  if xojo.core.Date.Now.SecondsFrom1970 - dateAjout.SecondsFrom1970 > 2592000 or  xojo.core.Date.Now.SecondsFrom1970 - dateAjout.SecondsFrom1970 < 1 then
-		    Check
+		    if email <> "" AND license_key <> "" AND Product_id <> "" then
+		      Check
+		    end if
 		  end if
 		End Sub
 	#tag EndMethod
@@ -111,7 +117,7 @@ Inherits Xojo.Net.HTTPSocket
 		Sub Deactivation()
 		  Dim url as Text = website+"/woocommerce/?wc-api=software-api&request=deactivation&email="+email+"&license_key="+license_key+"&product_id="+Product_id+"&instance="+instance.ToText
 		  
-		  dim tURL as text = url.ReplaceAll(" ", "").ReplaceAll(Text.FromUnicodeCodepoint(0009), "")
+		  dim tURL as text = url.ReplaceAll(" ", "").ReplaceAll(Text.FromUnicodeCodepoint(0009), "").ReplaceAccents
 		  me.Send("POST", tURL)
 		End Sub
 	#tag EndMethod
@@ -150,11 +156,11 @@ Inherits Xojo.Net.HTTPSocket
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		instance As Integer
+		instance As Integer = 0
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		license_key As Text
+		license_key As Text = "NOKEY"
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
@@ -162,7 +168,7 @@ Inherits Xojo.Net.HTTPSocket
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		Product_id As Text
+		Product_id As Text = "NOIDPRODUCT"
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
@@ -220,6 +226,7 @@ Inherits Xojo.Net.HTTPSocket
 		#tag ViewProperty
 			Name="Product_id"
 			Group="Behavior"
+			InitialValue="NOIDPRODUCT"
 			Type="Text"
 		#tag EndViewProperty
 		#tag ViewProperty
@@ -252,11 +259,13 @@ Inherits Xojo.Net.HTTPSocket
 		#tag ViewProperty
 			Name="instance"
 			Group="Behavior"
+			InitialValue="0"
 			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="license_key"
 			Group="Behavior"
+			InitialValue="NOKEY"
 			Type="Text"
 		#tag EndViewProperty
 		#tag ViewProperty
