@@ -132,7 +132,7 @@ Inherits Xojo.Net.HTTPSocket
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		Active As Boolean = false
+		Active As Boolean = True
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
