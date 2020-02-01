@@ -79,7 +79,13 @@ Inherits Xojo.Net.HTTPSocket
 		  
 		  
 		  dim tURL as text = url.ReplaceAll(" ", "").ReplaceAll(Text.FromUnicodeCodepoint(0009), "").ReplaceAccents
-		  me.Send("POST", tURL)
+		  Try
+		    me.Send("POST", tURL)
+		    
+		  catch err as Xojo.Core.UnsupportedOperationException
+		    
+		  End Try
+		  
 		End Sub
 	#tag EndMethod
 
