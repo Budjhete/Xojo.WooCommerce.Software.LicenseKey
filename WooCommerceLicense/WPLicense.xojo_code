@@ -1,26 +1,12 @@
 #tag Class
 Protected Class WPLicense
-Inherits Xojo.Net.HTTPSocket
+Inherits URLConnection
 	#tag Event
-		Sub Error(err as RuntimeException)
-		  Try
-		    me.error = err.Message.ToText
-		    wclInterface.wclErrorMessage(me)
-		    
-		  Catch re As RuntimeException
-		    
-		    System.DebugLog re.Message
-		  End Try
-		  'MsgBox err.Message + err.Reason
-		End Sub
-	#tag EndEvent
-
-	#tag Event
-		Sub PageReceived(URL as Text, HTTPStatus as Integer, Content as xojo.Core.MemoryBlock)
+		Sub ContentReceived(URL As String, HTTPStatus As Integer, content As String)
 		  Try
 		    
 		    'wclInterface.wclPageReceived(URL, HTTPStatus, Content)
-		    dim d as Xojo.Core.Dictionary = ConvertTextToJSON(Content)
+		    dim d as Dictionary = ConvertTextToJSON(Content)
 		    Active = d.Lookup("activated", false)
 		    Success = d.Lookup("success", false)
 		    Message = d.Lookup("message", "")
@@ -30,9 +16,9 @@ Inherits Xojo.Net.HTTPSocket
 		    if d.HasKey("activations") then
 		      Dim aActivations() as Auto = d.Value("activations")
 		      if aActivations.Ubound > -1 then
-		        for each item as Xojo.Core.Dictionary in aActivations
+		        for each item as Dictionary in aActivations
 		          Activations.Append(item)
-		          dim dInstance as Integer = Integer.FromText(item.Lookup("instance", "0"))
+		          dim dInstance as Integer = Integer.FromString(item.Lookup("instance", "0"))
 		          if dInstance = 0 then Continue
 		          if instance = dInstance then
 		            Active = true
@@ -44,7 +30,7 @@ Inherits Xojo.Net.HTTPSocket
 		    
 		    if not Active then
 		      if ActivationAttempt < 1 then
-		        Xojo.Core.Timer.CallLater(10000, AddressOf Activate)
+		        Timer.CallLater(10000, AddressOf Activate)
 		        ActivationAttempt = ActivationAttempt + 1
 		      else
 		        wclInterface.wcLicenseCheck(me)
@@ -63,22 +49,36 @@ Inherits Xojo.Net.HTTPSocket
 		End Sub
 	#tag EndEvent
 
+	#tag Event
+		Sub Error(e As RuntimeException)
+		  Try
+		    me.error = e.Message
+		    wclInterface.wclErrorMessage(me)
+		    
+		  Catch re As RuntimeException
+		    
+		    System.DebugLog re.Message
+		  End Try
+		  'MsgBox err.Message + err.Reason
+		End Sub
+	#tag EndEvent
+
 
 	#tag Method, Flags = &h0
 		Sub Activate()
-		  Dim url as Text = website+"/woocommerce/?wc-api=software-api&request=activation&email="+email+"&license_key="+license_key+"&product_id="+Product_id+"&platform="+Compagnie
+		  Dim url as String = website+"/woocommerce/?wc-api=software-api&request=activation&email="+email+"&license_key="+license_key+"&product_id="+Product_id+"&platform="+Compagnie
 		  if instance > 0 then url = url + "&instance="+instance.ToText
-		  dim tURL as text = url.ReplaceAll(" ", "").ReplaceAll(Text.FromUnicodeCodepoint(0009), "").ReplaceAccents
+		  dim tURL as String = url.ReplaceAll(" ", "").ReplaceAll(Text.FromUnicodeCodepoint(0009), "").ReplaceAccents
 		  me.Send("POST", tURL)
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub Check()
-		  Dim url as Text = website+"/woocommerce/?wc-api=software-api&request=check&email="+email+"&license_key="+license_key+"&product_id="+Product_id
+		  Dim url as String = website+"/woocommerce/?wc-api=software-api&request=check&email="+email+"&license_key="+license_key+"&product_id="+Product_id
 		  
 		  
-		  dim tURL as text = url.ReplaceAll(" ", "").ReplaceAll(Text.FromUnicodeCodepoint(0009), "").ReplaceAccents
+		  dim tURL as String = url.ReplaceAll(" ", "").ReplaceAll(Text.FromUnicodeCodepoint(0009), "").ReplaceAccents
 		  Try
 		    me.Send("POST", tURL)
 		    
@@ -90,20 +90,25 @@ Inherits Xojo.Net.HTTPSocket
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(pInterface as WCLInterface, dLicense as Xojo.Core.Dictionary)
+		Sub Constructor()
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Constructor(pInterface as WCLInterface, dLicense as Dictionary)
 		  // Calling the overridden superclass constructor.
-		  Super.Constructor
 		  wclInterface = pInterface
 		  website = dLicense.Lookup("website", "https://exemple.com")
 		  email = dLicense.Lookup("email", "")
 		  instance = dLicense.Lookup("instance", 0)
 		  license_key = dLicense.Lookup("license_key", "")
 		  Product_id = dLicense.Lookup("Product_id", "")
-		  dateAjout = dLicense.Lookup("dateAjout", xojo.core.Date.Now)
-		  dateExpiration = dLicense.Lookup("dateExpiration", Xojo.Core.Date.Now)
+		  dateAjout = dLicense.Lookup("dateAjout", DateTime.Now)
+		  dateExpiration = dLicense.Lookup("dateExpiration", DateTime.Now)
 		  Compagnie = dLicense.Lookup("Compagnie", "")
 		  
-		  if xojo.core.Date.Now.SecondsFrom1970 - dateAjout.SecondsFrom1970 > 2592000 or  xojo.core.Date.Now.SecondsFrom1970 - dateAjout.SecondsFrom1970 < 1 then
+		  if DateTime.Now.SecondsFrom1970 - dateAjout.SecondsFrom1970 > 2592000 or  DateTime.Now.SecondsFrom1970 - dateAjout.SecondsFrom1970 < 1 then
 		    if email <> "" AND license_key <> "" AND Product_id <> "" then
 		      Check
 		    end if
@@ -112,18 +117,18 @@ Inherits Xojo.Net.HTTPSocket
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function ConvertTextToJSON(Content as Xojo.Core.MemoryBlock) As Xojo.Core.Dictionary
-		  Dim jsonText As Text = Xojo.Core.TextEncoding.UTF8.ConvertDataToText(Content)
-		  return Xojo.Data.ParseJSON(jsonText)
+		Function ConvertTextToJSON(Content as MemoryBlock) As Dictionary
+		  Dim jsonText as String = Xojo.Core.TextEncoding.UTF8.ConvertDataToText(Content)
+		  return ParseJSON(jsonText)
 		  
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub Deactivation()
-		  Dim url as Text = website+"/woocommerce/?wc-api=software-api&request=deactivation&email="+email+"&license_key="+license_key+"&product_id="+Product_id+"&instance="+instance.ToText
+		  Dim url as String = website+"/woocommerce/?wc-api=software-api&request=deactivation&email="+email+"&license_key="+license_key+"&product_id="+Product_id+"&instance="+instance.ToText
 		  
-		  dim tURL as text = url.ReplaceAll(" ", "").ReplaceAll(Text.FromUnicodeCodepoint(0009), "").ReplaceAccents
+		  dim tURL as String = url.ReplaceAll(" ", "").ReplaceAll(Text.FromUnicodeCodepoint(0009), "").ReplaceAccents
 		  me.Send("POST", tURL)
 		End Sub
 	#tag EndMethod
@@ -134,7 +139,7 @@ Inherits Xojo.Net.HTTPSocket
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		Activations() As Xojo.Core.Dictionary
+		Activations() As Dictionary
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
@@ -142,23 +147,23 @@ Inherits Xojo.Net.HTTPSocket
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		Compagnie As Text
+		Compagnie As String
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		dateAjout As Xojo.Core.Date
+		dateAjout As DateTime
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		dateExpiration As Xojo.Core.Date
+		dateExpiration As DateTime
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		email As Text
+		email As String
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		error As Text
+		error As String
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
@@ -166,15 +171,15 @@ Inherits Xojo.Net.HTTPSocket
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		license_key As Text = "NOKEY"
+		license_key As String = "NOKEY"
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		Message As Text
+		Message As String
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		Product_id As Text = "NOIDPRODUCT"
+		Product_id As String = "NOIDPRODUCT"
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
@@ -186,17 +191,25 @@ Inherits Xojo.Net.HTTPSocket
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		website As Text
+		website As String
 	#tag EndProperty
 
 
 	#tag ViewBehavior
 		#tag ViewProperty
-			Name="ValidateCertificates"
+			Name="AllowCertificateValidation"
 			Visible=false
 			Group="Behavior"
 			InitialValue=""
 			Type="Boolean"
+			EditorType=""
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="HTTPStatusCode"
+			Visible=false
+			Group="Behavior"
+			InitialValue=""
+			Type="Integer"
 			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
@@ -244,8 +257,8 @@ Inherits Xojo.Net.HTTPSocket
 			Visible=false
 			Group="Behavior"
 			InitialValue="NOIDPRODUCT"
-			Type="Text"
-			EditorType=""
+			Type="String"
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="ActivationAttempt"
@@ -268,24 +281,24 @@ Inherits Xojo.Net.HTTPSocket
 			Visible=false
 			Group="Behavior"
 			InitialValue=""
-			Type="Text"
-			EditorType=""
+			Type="String"
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="email"
 			Visible=false
 			Group="Behavior"
 			InitialValue=""
-			Type="Text"
-			EditorType=""
+			Type="String"
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="error"
 			Visible=false
 			Group="Behavior"
 			InitialValue=""
-			Type="Text"
-			EditorType=""
+			Type="String"
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="instance"
@@ -300,16 +313,16 @@ Inherits Xojo.Net.HTTPSocket
 			Visible=false
 			Group="Behavior"
 			InitialValue="NOKEY"
-			Type="Text"
-			EditorType=""
+			Type="String"
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Message"
 			Visible=false
 			Group="Behavior"
 			InitialValue=""
-			Type="Text"
-			EditorType=""
+			Type="String"
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Success"
@@ -324,8 +337,8 @@ Inherits Xojo.Net.HTTPSocket
 			Visible=false
 			Group="Behavior"
 			InitialValue=""
-			Type="Text"
-			EditorType=""
+			Type="String"
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class
