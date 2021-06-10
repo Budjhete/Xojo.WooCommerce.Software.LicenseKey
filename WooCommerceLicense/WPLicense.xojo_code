@@ -67,8 +67,8 @@ Inherits URLConnection
 	#tag Method, Flags = &h0
 		Sub Activate()
 		  Dim url as String = website+"/woocommerce/?wc-api=software-api&request=activation&email="+email+"&license_key="+license_key+"&product_id="+Product_id+"&platform="+Compagnie
-		  if instance > 0 then url = url + "&instance="+instance.ToText
-		  dim tURL as String = url.ReplaceAll(" ", "").ReplaceAll(Text.FromUnicodeCodepoint(0009), "").ReplaceAccents
+		  if instance > 0 then url = url + "&instance="+instance.ToString
+		  dim tURL as String = url.ReplaceAll(" ", "").ReplaceAll(chr(9), "").ReplaceAccents
 		  me.Send("POST", tURL)
 		End Sub
 	#tag EndMethod
@@ -78,11 +78,11 @@ Inherits URLConnection
 		  Dim url as String = website+"/woocommerce/?wc-api=software-api&request=check&email="+email+"&license_key="+license_key+"&product_id="+Product_id
 		  
 		  
-		  dim tURL as String = url.ReplaceAll(" ", "").ReplaceAll(Text.FromUnicodeCodepoint(0009), "").ReplaceAccents
+		  dim tURL as String = url.ReplaceAll(" ", "").ReplaceAll(chr(9), "").ReplaceAccents
 		  Try
 		    me.Send("POST", tURL)
 		    
-		  catch err as Xojo.Core.UnsupportedOperationException
+		  catch err as UnsupportedOperationException
 		    
 		  End Try
 		  
@@ -118,8 +118,8 @@ Inherits URLConnection
 
 	#tag Method, Flags = &h0
 		Function ConvertTextToJSON(Content as MemoryBlock) As Dictionary
-		  Dim jsonText as String = Xojo.Core.TextEncoding.UTF8.ConvertDataToText(Content)
-		  return ParseJSON(jsonText)
+		  'Dim jsonText as String = Xojo.Core.TextEncoding.UTF8.ConvertDataToText(Content)
+		  return ParseJSON(Content)
 		  
 		End Function
 	#tag EndMethod
