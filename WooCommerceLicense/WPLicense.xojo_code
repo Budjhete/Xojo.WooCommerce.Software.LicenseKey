@@ -1,75 +1,13 @@
 #tag Class
 Protected Class WPLicense
-Inherits URLConnection
-	#tag Event
-		Sub ContentReceived(URL As String, HTTPStatus As Integer, content As String)
-		  Try
-		    
-		    'wclInterface.wclPageReceived(URL, HTTPStatus, Content)
-		    dim d as Dictionary = ConvertTextToJSON(Content)
-		    Active = d.Lookup("activated", false)
-		    Success = d.Lookup("success", false)
-		    Message = d.Lookup("message", "")
-		    error = d.Lookup("error", "")
-		    if  d.Lookup("instance", 0) > 0 then instance = d.Lookup("instance", 0)
-		    
-		    if d.HasKey("activations") then
-		      Dim aActivations() as Auto = d.Value("activations")
-		      if aActivations.Ubound > -1 then
-		        for each item as Dictionary in aActivations
-		          Activations.Append(item)
-		          dim dInstance as Integer = Integer.FromString(item.Lookup("instance", "0"))
-		          if dInstance = 0 then Continue
-		          if instance = dInstance then
-		            Active = true
-		            exit
-		          end if
-		        Next
-		      end if
-		    end if
-		    
-		    if not Active then
-		      if ActivationAttempt < 1 then
-		        Timer.CallLater(10000, AddressOf Activate)
-		        ActivationAttempt = ActivationAttempt + 1
-		      else
-		        wclInterface.wcLicenseCheck(me)
-		      end if
-		      
-		    else
-		      wclInterface.wcLicenseCheck(me)
-		    end if
-		    
-		    
-		    
-		  Catch re As RuntimeException
-		    
-		    System.DebugLog re.Message
-		  End Try
-		End Sub
-	#tag EndEvent
-
-	#tag Event
-		Sub Error(e As RuntimeException)
-		  Try
-		    me.error = e.Message
-		    wclInterface.wclErrorMessage(me)
-		    
-		  Catch re As RuntimeException
-		    
-		    System.DebugLog re.Message
-		  End Try
-		  'MsgBox err.Message + err.Reason
-		End Sub
-	#tag EndEvent
-
-
 	#tag Method, Flags = &h0
 		Sub Activate()
 		  Dim url as String = website+"/woocommerce/?wc-api=software-api&request=activation&email="+email+"&license_key="+license_key+"&product_id="+Product_id+"&platform="+Compagnie
 		  if instance > 0 then url = url + "&instance="+instance.ToString
 		  dim tURL as String = url.ReplaceAll(" ", "").ReplaceAll(chr(9), "").ReplaceAccents
-		  me.Send("POST", tURL)
+		  
+		  Dim SocketLicense as new WPLicenseSocket(me)
+		  SocketLicense.Send("POST", tURL)
 		End Sub
 	#tag EndMethod
 
@@ -77,10 +15,11 @@ Inherits URLConnection
 		Sub Check()
 		  Dim url as String = website+"/woocommerce/?wc-api=software-api&request=check&email="+email+"&license_key="+license_key+"&product_id="+Product_id
 		  
+		  dim wpSocks as new WPLicenseSocket(me)
 		  
 		  dim tURL as String = url.ReplaceAll(" ", "").ReplaceAll(chr(9), "").ReplaceAccents
 		  Try
-		    me.Send("POST", tURL)
+		    wpSocks.Send("POST", tURL)
 		    
 		  catch err as UnsupportedOperationException
 		    
@@ -129,7 +68,57 @@ Inherits URLConnection
 		  Dim url as String = website+"/woocommerce/?wc-api=software-api&request=deactivation&email="+email+"&license_key="+license_key+"&product_id="+Product_id+"&instance="+instance.ToText
 		  
 		  dim tURL as String = url.ReplaceAll(" ", "").ReplaceAll(Text.FromUnicodeCodepoint(0009), "").ReplaceAccents
-		  me.Send("POST", tURL)
+		  Dim SocketLicense as new WPLicenseSocket(me)
+		  
+		  SocketLicense.Send("POST", tURL)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Received(url as string, HTTPStatus as integer, content as String)
+		  Try
+		    
+		    'wclInterface.wclPageReceived(URL, HTTPStatus, Content)
+		    dim d as Dictionary = ConvertTextToJSON(Content)
+		    Active = d.Lookup("activated", false)
+		    Success = d.Lookup("success", false)
+		    Message = d.Lookup("message", "")
+		    error = d.Lookup("error", "")
+		    if  d.Lookup("instance", 0) > 0 then instance = d.Lookup("instance", 0)
+		    
+		    if d.HasKey("activations") then
+		      Dim aActivations() as Variant = d.Value("activations")
+		      if aActivations.Ubound > -1 then
+		        for each item as Dictionary in aActivations
+		          Activations.Append(item)
+		          dim dInstance as Integer = Integer.FromString(item.Lookup("instance", "0"))
+		          if dInstance = 0 then Continue
+		          if instance = dInstance then
+		            Active = true
+		            exit
+		          end if
+		        Next
+		      end if
+		    end if
+		    
+		    if not Active then
+		      if ActivationAttempt < 1 then
+		        Timer.CallLater(10000, AddressOf Activate)
+		        ActivationAttempt = ActivationAttempt + 1
+		      else
+		        wclInterface.wcLicenseCheck(me)
+		      end if
+		      
+		    else
+		      wclInterface.wcLicenseCheck(me)
+		    end if
+		    
+		    
+		    
+		  Catch re As RuntimeException
+		    
+		    System.DebugLog re.Message
+		  End Try
 		End Sub
 	#tag EndMethod
 
@@ -194,24 +183,12 @@ Inherits URLConnection
 		website As String
 	#tag EndProperty
 
+	#tag Property, Flags = &h0
+		wpSocket As WPLicenseSocket
+	#tag EndProperty
+
 
 	#tag ViewBehavior
-		#tag ViewProperty
-			Name="AllowCertificateValidation"
-			Visible=false
-			Group="Behavior"
-			InitialValue=""
-			Type="Boolean"
-			EditorType=""
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="HTTPStatusCode"
-			Visible=false
-			Group="Behavior"
-			InitialValue=""
-			Type="Integer"
-			EditorType=""
-		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Name"
 			Visible=true
@@ -253,76 +230,12 @@ Inherits URLConnection
 			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
-			Name="Product_id"
+			Name="website"
 			Visible=false
 			Group="Behavior"
-			InitialValue="NOIDPRODUCT"
+			InitialValue=""
 			Type="String"
-			EditorType="MultiLineEditor"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="ActivationAttempt"
-			Visible=false
-			Group="Behavior"
-			InitialValue="0"
-			Type="Integer"
 			EditorType=""
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="Active"
-			Visible=false
-			Group="Behavior"
-			InitialValue="false"
-			Type="Boolean"
-			EditorType=""
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="Compagnie"
-			Visible=false
-			Group="Behavior"
-			InitialValue=""
-			Type="String"
-			EditorType="MultiLineEditor"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="email"
-			Visible=false
-			Group="Behavior"
-			InitialValue=""
-			Type="String"
-			EditorType="MultiLineEditor"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="error"
-			Visible=false
-			Group="Behavior"
-			InitialValue=""
-			Type="String"
-			EditorType="MultiLineEditor"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="instance"
-			Visible=false
-			Group="Behavior"
-			InitialValue="0"
-			Type="Integer"
-			EditorType=""
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="license_key"
-			Visible=false
-			Group="Behavior"
-			InitialValue="NOKEY"
-			Type="String"
-			EditorType="MultiLineEditor"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="Message"
-			Visible=false
-			Group="Behavior"
-			InitialValue=""
-			Type="String"
-			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Success"
@@ -333,12 +246,84 @@ Inherits URLConnection
 			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
-			Name="website"
+			Name="Product_id"
+			Visible=false
+			Group="Behavior"
+			InitialValue="NOIDPRODUCT"
+			Type="String"
+			EditorType=""
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="Message"
 			Visible=false
 			Group="Behavior"
 			InitialValue=""
 			Type="String"
-			EditorType="MultiLineEditor"
+			EditorType=""
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="license_key"
+			Visible=false
+			Group="Behavior"
+			InitialValue="NOKEY"
+			Type="String"
+			EditorType=""
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="instance"
+			Visible=false
+			Group="Behavior"
+			InitialValue="0"
+			Type="Integer"
+			EditorType=""
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="error"
+			Visible=false
+			Group="Behavior"
+			InitialValue=""
+			Type="String"
+			EditorType=""
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="email"
+			Visible=false
+			Group="Behavior"
+			InitialValue=""
+			Type="String"
+			EditorType=""
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="Compagnie"
+			Visible=false
+			Group="Behavior"
+			InitialValue=""
+			Type="String"
+			EditorType=""
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="Active"
+			Visible=false
+			Group="Behavior"
+			InitialValue="True"
+			Type="Boolean"
+			EditorType=""
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="ActivationAttempt"
+			Visible=false
+			Group="Behavior"
+			InitialValue="0"
+			Type="Integer"
+			EditorType=""
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="wpSocket"
+			Visible=false
+			Group="Behavior"
+			InitialValue=""
+			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class
