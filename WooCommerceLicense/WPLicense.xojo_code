@@ -235,7 +235,7 @@ Protected Class WPLicense
 			Group="Behavior"
 			InitialValue=""
 			Type="String"
-			EditorType=""
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Success"
@@ -251,7 +251,7 @@ Protected Class WPLicense
 			Group="Behavior"
 			InitialValue="NOIDPRODUCT"
 			Type="String"
-			EditorType=""
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Message"
@@ -259,7 +259,7 @@ Protected Class WPLicense
 			Group="Behavior"
 			InitialValue=""
 			Type="String"
-			EditorType=""
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="license_key"
@@ -267,7 +267,7 @@ Protected Class WPLicense
 			Group="Behavior"
 			InitialValue="NOKEY"
 			Type="String"
-			EditorType=""
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="instance"
@@ -283,7 +283,7 @@ Protected Class WPLicense
 			Group="Behavior"
 			InitialValue=""
 			Type="String"
-			EditorType=""
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="email"
@@ -291,7 +291,7 @@ Protected Class WPLicense
 			Group="Behavior"
 			InitialValue=""
 			Type="String"
-			EditorType=""
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Compagnie"
@@ -299,7 +299,7 @@ Protected Class WPLicense
 			Group="Behavior"
 			InitialValue=""
 			Type="String"
-			EditorType=""
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Active"
@@ -314,14 +314,6 @@ Protected Class WPLicense
 			Visible=false
 			Group="Behavior"
 			InitialValue="0"
-			Type="Integer"
-			EditorType=""
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="wpSocket"
-			Visible=false
-			Group="Behavior"
-			InitialValue=""
 			Type="Integer"
 			EditorType=""
 		#tag EndViewProperty
