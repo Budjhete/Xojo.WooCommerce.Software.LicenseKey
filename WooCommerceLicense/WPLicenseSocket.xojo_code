@@ -47,6 +47,14 @@ Inherits URLConnection
 
 	#tag ViewBehavior
 		#tag ViewProperty
+			Name="FollowRedirects"
+			Visible=false
+			Group="Behavior"
+			InitialValue=""
+			Type="Boolean"
+			EditorType=""
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="AllowCertificateValidation"
 			Visible=false
 			Group="Behavior"
