@@ -58,7 +58,15 @@ Protected Class WPLicense
 	#tag Method, Flags = &h0
 		Function ConvertTextToJSON(Content as MemoryBlock) As Dictionary
 		  'Dim jsonText as String = Xojo.Core.TextEncoding.UTF8.ConvertDataToText(Content)
-		  return ParseJSON(Content)
+		  #Pragma BreakOnExceptions false
+		  Try
+		    dim sss as string = Content.StringValue(0, Content.Size)
+		    #Pragma BreakOnExceptions true
+		    return ParseJSON(Content)
+		  Catch
+		    #Pragma BreakOnExceptions true
+		    Return new Dictionary
+		  End Try
 		  
 		End Function
 	#tag EndMethod
