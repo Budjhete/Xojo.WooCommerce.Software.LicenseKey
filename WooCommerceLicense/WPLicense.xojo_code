@@ -7,7 +7,7 @@ Protected Class WPLicense
 		  dim tURL as String = url.ReplaceAll(" ", "").ReplaceAll(chr(9), "").ReplaceAccents
 		  
 		  Dim SocketLicense as new WPLicenseSocket(me)
-		  SocketLicense.Send("POST", tURL)
+		  'SocketLicense.Send("POST", tURL)
 		End Sub
 	#tag EndMethod
 
@@ -19,7 +19,7 @@ Protected Class WPLicense
 		  
 		  dim tURL as String = url.ReplaceAll(" ", "").ReplaceAll(chr(9), "").ReplaceAccents
 		  Try
-		    wpSocks.Send("POST", tURL)
+		    'wpSocks.Send("POST", tURL)
 		    
 		  catch err as UnsupportedOperationException
 		    
@@ -73,7 +73,7 @@ Protected Class WPLicense
 
 	#tag Method, Flags = &h0
 		Sub Deactivation()
-		  Dim url as String = website+"/woocommerce/?wc-api=software-api&request=deactivation&email="+email+"&license_key="+license_key+"&product_id="+Product_id+"&instance="+instance.ToText
+		  Dim url as String = website+"/woocommerce/?wc-api=software-api&request=deactivation&email="+email+"&license_key="+license_key+"&product_id="+Product_id+"&instance="+instance.ToString
 		  
 		  dim tURL as String = url.ReplaceAll(" ", "").ReplaceAll(Text.FromUnicodeCodepoint(0009), "").ReplaceAccents
 		  Dim SocketLicense as new WPLicenseSocket(me)
@@ -96,9 +96,9 @@ Protected Class WPLicense
 		    
 		    if d.HasKey("activations") then
 		      Dim aActivations() as Variant = d.Value("activations")
-		      if aActivations.Ubound > -1 then
+		      if aActivations.LastIndex > -1 then
 		        for each item as Dictionary in aActivations
-		          Activations.Append(item)
+		          Activations.Add(item)
 		          dim dInstance as Integer = Integer.FromString(item.Lookup("instance", "0"))
 		          if dInstance = 0 then Continue
 		          if instance = dInstance then
